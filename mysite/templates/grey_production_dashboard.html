@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Required dependencies -->
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+
+<!-- Custom styles -->
+<style>
+    .timeline-bar {
+        height: 30px;
+        transition: all 0.3s ease;
+    }
+    .timeline-bar:hover {
+        opacity: 0.8;
+    }
+    .efficiency-bar {
+        height: 20px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .efficiency-fill {
+        height: 100%;
+        background: #3b82f6;
+        transition: width 0.3s ease;
+    }
+</style>
+
+<!-- Component container -->
+<div id="grey-production-dashboard"></div>
+
+<!-- Load component script as regular script, not as module -->
+<script src="{{ url_for('static', filename='js/GreyProductionDashboard.js') }}"></script>
+<script>
+    // Wait for both DOM and component script to load
+    window.addEventListener('load', () => {
+        if (window.GreyProductionDashboard) {
+            const container = document.getElementById('grey-production-dashboard');
+            const root = ReactDOM.createRoot(container);
+            root.render(React.createElement(window.GreyProductionDashboard));
+        } else {
+            console.error('GreyProductionDashboard component not found');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Status Update - Factory Management System{% endblock %}
+
+{% block extra_css %}
+<!-- Add Tailwind CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="status-update-root">
+  <div class="loading">Initializing...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Load React -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<!-- Load your component file first -->
+<script src="{{ url_for('static', filename='js/StatusUpdateDashboard.js') }}"></script>
+
+<!-- Initialize React component -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
+    try {
+      const container = document.getElementById('status-update-root');
+      if (!container) {
+        throw new Error('Root container not found');
+      }
+
+      console.log('Found container:', container);
+      console.log('StatusUpdate component available:', typeof window.StatusUpdate);
+
+      const root = ReactDOM.createRoot(container);
+      root.render(React.createElement(window.StatusUpdate));
+      
+      console.log('React component mounted');
+    } catch (error) {
+      console.error('Error mounting React component:', error);
+      document.getElementById('status-update-root').innerHTML = 
+        '<div class="text-red-600 p-4">' +
+        'Error loading dashboard: ' + error.message +
+        '</div>';
+    }
+  });
+</script>
+{% endblock %}

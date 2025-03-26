@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Delayed Combos Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    <!-- Header -->
+    <div class="bg-white shadow-md rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800">
+                        <i class="fas fa-clock mr-2"></i>
+                        Delayed Combos Dashboard
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Showing combinations with production delays of 10 days or more
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">
+                        {{ total_delayed }} Delayed Combo{{ 's' if total_delayed != 1 }}
+                    </span>
+                    <a href="{{ url_for('dashboards') }}"
+                       class="text-sm text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        Back to Summary
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if data %}
+        <!-- Table Container -->
+        <div class="overflow-x-auto">
+            <table id="delayedCombosTable" class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <!-- Main Headers -->
+                    <tr class="bg-gray-50">
+                        <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Order Information</th>
+                        <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Specifications</th>
+                        <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Details</th>
+                        <th colspan="2" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Progress</th>
+                    </tr>
+                    <!-- Sub Headers -->
+                    <tr class="bg-gray-50">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Info</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reed</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Counts</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shades</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Party</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dyeing Order</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stages</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delay</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in data %}
+                    <tr class="hover:bg-red-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">Order: {{ item['Order No.'] }}</div>
+                            <div class="text-sm text-gray-500">Combo: {{ item['Combo No.'] }}</div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                {{ item['Design No.'] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ item['Reed']|default('N/A') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ item['Factory Order (Meters)']|default('N/A') }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            <div>W: {{ item['Warping Location']|default('N/A') }}</div>
+                            <div>WV: {{ item['Weaving Location']|default('N/A') }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {{ item['Warp Count']|default('N/A') }} / {{ item['Weft Count']|default('N/A') }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            <div>Warp: {{ item['Warp Shades']|default('N/A') }}</div>
+                            <div>Weft: {{ item['Weft Shades']|default('N/A') }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ item['Party Name']|default('N/A') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                       {% if item.combo_delay >= 20 %}bg-red-200 text-red-900
+                                       {% else %}bg-red-100 text-red-800{% endif %}">
+                                Delayed
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ item['Yarn Dyeing Order No.']|default('N/A') }}</td>
+                        <td class="px-6 py-4">
+                            <div class="relative pt-1">
+                                <div class="flex h-6 overflow-hidden rounded-full bg-gray-200">
+                                    {% set stages = {
+                                        'Warping': item.stages.warping,
+                                        'Sizing': item.stages.sizing,
+                                        'Beam': item.stages.beam_on_loom,
+                                        'Grey': item.stages.grey
+                                    } %}
+
+                                    {% for stage_name, stage_date in stages.items() %}
+                                        <div class="flex-1 {{ 'bg-green-500' if stage_date else 'bg-gray-300' }}
+                                             border-r border-white last:border-r-0"
+                                             title="{{ stage_name }}: {% if stage_date %}{{ stage_date.strftime('%Y-%m-%d') }}{% else %}Not Started{% endif %}">
+                                            <div class="text-center text-xs text-white py-1">{{ stage_name[:4] }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-medium rounded-full
+                                       {% if item.combo_delay >= 20 %}bg-red-200 text-red-900
+                                       {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ item.combo_delay }} days
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- No Data Message -->
+        <div class="p-6 text-center">
+            <div class="text-gray-500">
+                <i class="fas fa-check-circle text-3xl mb-3"></i>
+                <p class="text-lg">No delayed combinations found.</p>
+                <p class="text-sm mt-2">All production combos are currently within the 10-day threshold.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#delayedCombosTable').DataTable({
+            pageLength: 25,
+            order: [[10, 'desc']], // Sort by delay column by default
+            responsive: true,
+            dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"<"flex-1"l><"flex-1"f>>' +
+                 '<"overflow-x-auto"tr>' +
+                 '<"flex flex-col sm:flex-row justify-between items-center mt-4"<"flex-1"i><"flex-1"p>>',
+            language: {
+                search: "Search delayed items:",
+                lengthMenu: "Show _MENU_ delayed items",
+                info: "Showing _START_ to _END_ of _TOTAL_ delayed items",
+                infoEmpty: "No delayed items to show",
+                emptyTable: "No delayed items found"
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<style>
+    /* DataTables Tailwind CSS Integration */
+    .dataTables_wrapper .dataTables_length select {
+        @apply rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        @apply rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        @apply px-3 py-1 mx-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        @apply text-white bg-blue-600 border-blue-600 hover:bg-blue-700;
+    }
+
+    /* Custom scrollbar for webkit browsers */
+    .overflow-x-auto::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .overflow-x-auto::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .overflow-x-auto::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>
+{% endblock %}
+
+<!--{% extends "base.html" %}-->
+
+<!--{% block title %}Delayed Combos Dashboard{% endblock %}-->
+
+<!--{% block content %}-->
+<!--<div class="bg-white shadow-md rounded-lg">-->
+    <!-- Header -->
+<!--    <div class="px-6 py-4 border-b border-gray-200">-->
+<!--        <div class="flex justify-between items-center">-->
+<!--            <h2 class="text-xl font-semibold text-gray-800">-->
+<!--                <i class="fas fa-project-diagram mr-2"></i>-->
+<!--                Delayed Combos Dashboard-->
+<!--            </h2>-->
+<!--            <span class="px-3 py-1 text-sm font-medium rounded-full bg-red-100 text-red-800">-->
+<!--                {{ total_delayed }} Delayed Combo{{ 's' if total_delayed != 1 }}-->
+<!--            </span>-->
+<!--        </div>-->
+<!--        <p class="mt-2 text-sm text-gray-600">-->
+<!--            Showing combinations with production delays of 10 days or more-->
+<!--        </p>-->
+<!--    </div>-->
+
+<!--    {% if data %}-->
+    <!-- Table Container -->
+<!--    <div class="overflow-x-auto">-->
+<!--        <table id="productionTable" class="min-w-full divide-y divide-gray-200">-->
+<!--            <thead>-->
+                <!-- Main Headers -->
+<!--                <tr class="bg-gray-50">-->
+<!--                    <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Order Information</th>-->
+<!--                    <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Specifications</th>-->
+<!--                    <th colspan="3" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Details</th>-->
+<!--                    <th colspan="2" class="px-6 py-3 text-center text-sm font-semibold text-gray-700">Progress</th>-->
+<!--                </tr>-->
+                <!-- Sub Headers -->
+<!--                <tr class="bg-gray-50">-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Info</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reed</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Counts</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shades</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Party</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dyeing Order</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stages</th>-->
+<!--                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delay</th>-->
+<!--                </tr>-->
+<!--            </thead>-->
+<!--            <tbody class="bg-white divide-y divide-gray-200">-->
+<!--                {% for item in data %}-->
+<!--                <tr class="bg-red-50 hover:bg-red-100">-->
+<!--                    <td class="px-6 py-4 whitespace-nowrap">-->
+<!--                        <div class="text-sm font-medium text-gray-900">Order: {{ item['Order No.'] }}</div>-->
+<!--                        <div class="text-sm text-gray-500">Combo: {{ item['Combo No.'] }}</div>-->
+<!--                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">-->
+<!--                            {{ item['Design No.'] }}-->
+<!--                        </span>-->
+<!--                    </td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">{{ item['Reed']|default('N/A') }}</td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">{{ item['Quantity (Meters)']|default('N/A') }}</td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">-->
+<!--                        <div>W: {{ item['Warping Location']|default('N/A') }}</div>-->
+<!--                        <div>WV: {{ item['Weaving Location']|default('N/A') }}</div>-->
+<!--                    </td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">-->
+<!--                        {{ item['Warp Count']|default('N/A') }} / {{ item['Weft Count']|default('N/A') }}-->
+<!--                    </td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">{{ item['Warp Shades']|default('N/A') }}</td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">{{ item['Party Name']|default('N/A') }}</td>-->
+<!--                    <td class="px-6 py-4 whitespace-nowrap">-->
+<!--                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">-->
+<!--                            Delayed-->
+<!--                        </span>-->
+<!--                    </td>-->
+<!--                    <td class="px-6 py-4 text-sm text-gray-500">{{ item['Yarn Dyeing Order No.']|default('N/A') }}</td>-->
+<!--                    <td class="px-6 py-4">-->
+<!--                        <div class="relative pt-1">-->
+<!--                            <div class="flex h-6 overflow-hidden rounded-full bg-gray-200">-->
+<!--                                {% set stages = {-->
+<!--                                    'Warping': item.stages.warping,-->
+<!--                                    'Sizing': item.stages.sizing,-->
+<!--                                    'Beam': item.stages.beam_on_loom,-->
+<!--                                    'Grey': item.stages.grey-->
+<!--                                } %}-->
+
+<!--                                {% for stage_name, stage_date in stages.items() %}-->
+<!--                                    <div class="flex-1 {{ 'bg-green-500' if stage_date else 'bg-gray-300' }} -->
+<!--                                         border-r border-white last:border-r-0"-->
+<!--                                         title="{{ stage_name }}: {% if stage_date %}{{ stage_date.strftime('%Y-%m-%d') }}{% else %}Not Started{% endif %}">-->
+<!--                                        <div class="text-center text-xs text-white py-1">{{ stage_name[:4] }}</div>-->
+<!--                                    </div>-->
+<!--                                {% endfor %}-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </td>-->
+<!--                    <td class="px-6 py-4 whitespace-nowrap">-->
+<!--                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">-->
+<!--                            {{ item.combo_delay }} days-->
+<!--                        </span>-->
+<!--                    </td>-->
+<!--                </tr>-->
+<!--                {% endfor %}-->
+<!--            </tbody>-->
+<!--        </table>-->
+<!--    </div>-->
+<!--    {% else %}-->
+    <!-- No Data Message -->
+<!--    <div class="p-6 text-center">-->
+<!--        <div class="text-gray-500">-->
+<!--            <i class="fas fa-check-circle text-3xl mb-3"></i>-->
+<!--            <p class="text-lg">No delayed combinations found.</p>-->
+<!--            <p class="text-sm mt-2">All production combos are currently within the 10-day threshold.</p>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--    {% endif %}-->
+<!--</div>-->
+
+<!--{% endblock %}-->
+
+<!--{% block extra_js %}-->
+<!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>-->
+<!--<script>-->
+<!--    $(document).ready(function() {-->
+<!--        $('#productionTable').DataTable({-->
+<!--            pageLength: 25,-->
+<!--            order: [[0, 'asc']],-->
+<!--            responsive: true,-->
+<!--            dom: '<"flex flex-col sm:flex-row justify-between items-center mb-4"<"flex-1"l><"flex-1"f>>' +-->
+<!--                 '<"overflow-x-auto"tr>' +-->
+<!--                 '<"flex flex-col sm:flex-row justify-between items-center mt-4"<"flex-1"i><"flex-1"p>>',-->
+<!--            language: {-->
+<!--                search: "Search delayed items:",-->
+<!--                lengthMenu: "Show _MENU_ delayed items",-->
+<!--                info: "Showing _START_ to _END_ of _TOTAL_ delayed items",-->
+<!--                infoEmpty: "No delayed items to show",-->
+<!--                emptyTable: "No delayed items found"-->
+<!--            }-->
+<!--        });-->
+<!--    });-->
+<!--</script>-->
+<!--{% endblock %}-->
+
+<!--{% block extra_css %}-->
+<!--<style>-->
+<!--    /* DataTables Tailwind CSS Integration */-->
+<!--    .dataTables_wrapper .dataTables_length select {-->
+<!--        @apply rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50;-->
+<!--    }-->
+
+<!--    .dataTables_wrapper .dataTables_filter input {-->
+<!--        @apply rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50;-->
+<!--    }-->
+
+<!--    .dataTables_wrapper .dataTables_paginate .paginate_button {-->
+<!--        @apply px-3 py-1 mx-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50;-->
+<!--    }-->
+
+<!--    .dataTables_wrapper .dataTables_paginate .paginate_button.current {-->
+<!--        @apply text-white bg-blue-600 border-blue-600 hover:bg-blue-700;-->
+<!--    }-->
+
+<!--    /* Custom scrollbar for webkit browsers */-->
+<!--    .overflow-x-auto::-webkit-scrollbar {-->
+<!--        height: 8px;-->
+<!--    }-->
+
+<!--    .overflow-x-auto::-webkit-scrollbar-track {-->
+<!--        background: #f1f1f1;-->
+<!--        border-radius: 4px;-->
+<!--    }-->
+
+<!--    .overflow-x-auto::-webkit-scrollbar-thumb {-->
+<!--        background: #888;-->
+<!--        border-radius: 4px;-->
+<!--    }-->
+
+<!--    .overflow-x-auto::-webkit-scrollbar-thumb:hover {-->
+<!--        background: #555;-->
+<!--    }-->
+<!--</style>-->
+<!--{% endblock %}-->

@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block title %}Unit 259 Production - Factory Management System{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<!-- Custom CSS for Select2 -->
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        padding: 5px !important;
+    }
+    .select2-container--default .select2-selection--single {
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.375rem !important;
+    }
+    .readonly-field {
+        background-color: #f3f4f6 !important;
+        cursor: not-allowed !important;
+    }
+    .shift-time-container {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .shift-time-container > div {
+        flex: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Unit 259 Production</h1>
+        <p class="text-gray-600">Track production details for Unit 259/1</p>
+    </div>
+
+    <!-- Production Form -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">New Production Entry</h2>
+        <form id="unit259Form" method="POST" class="space-y-4">
+            {{ form.csrf_token }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Basic Info -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.date.label.text }}
+                    </label>
+                    {{ form.date(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.shift.label.text }}
+                    </label>
+                    {{ form.shift(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <!-- Loom and Design Info -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.loom_no.label.text }}
+                    </label>
+                    {{ form.loom_no(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <!-- Shift Time Selection -->
+                <div class="form-group col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Shift Time</label>
+                    <div class="shift-time-container">
+                        <div>
+                            <label class="block text-xs text-gray-500">Hours</label>
+                            {{ form.shift_hours(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500">Minutes</label>
+                            {{ form.shift_minutes(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.design_no.label.text }}
+                    </label>
+                    {{ form.design_no(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.order_no.label.text }}
+                    </label>
+                    {{ form.order_no(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <!-- Technical Parameters -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.reed.label.text }}
+                    </label>
+                    {{ form.reed(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.rpm.label.text }}
+                    </label>
+                    {{ form.rpm(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.ppi.label.text }}
+                    </label>
+                    {{ form.ppi(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <!-- Production Parameters -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.reading.label.text }}
+                    </label>
+                    {{ form.reading(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.warp.label.text }}
+                    </label>
+                    {{ form.warp(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.weft.label.text }}
+                    </label>
+                    {{ form.weft(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <!-- Calculated Fields -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.efficiency.label.text }}
+                    </label>
+                    {{ form.efficiency(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.production_meters.label.text }}
+                    </label>
+                    {{ form.production_meters(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.loss_meters.label.text }}
+                    </label>
+                    {{ form.loss_meters(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 readonly-field") }}
+                </div>
+
+                <!-- Staff Details -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.weaver_name.label.text }}
+                    </label>
+                    {{ form.weaver_name(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.reliever_name.label.text }}
+                    </label>
+                    {{ form.reliever_name(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.foreman.label.text }}
+                    </label>
+                    {{ form.foreman(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.qc_checker.label.text }}
+                    </label>
+                    {{ form.qc_checker(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="form-group mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.comments.label.text }}
+                </label>
+                {{ form.comments(class_="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="submit" id="submitButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add Production Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Production Records Table -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Production Records</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="production-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loom No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Design No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Production (M)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Efficiency</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loss (M)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Weaver</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comments</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for record in records %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.date }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.shift }} ({{ record.shift_timing }})</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.shift_hours }}h {{ record.shift_minutes }}m</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.loom_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.design_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.order_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.production_meters }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.2f"|format(record.efficiency|float) }}%</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.loss_meters }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.weaver_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.comments }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- DataTables -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        width: '100%',
+        placeholder: function() {
+            return $(this).data('placeholder');
+        }
+    });
+
+    // Initialize DataTable
+    $('#production-table').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[0, 'desc'], [1, 'desc']], // Sort by date and shift
+        language: {
+            search: '',
+            searchPlaceholder: 'Search records...'
+        },
+        scrollX: true
+    });
+
+    // Auto-populate design details when loom number changes
+    $('#loom_no').on('change', function() {
+        const loomNo = $(this).val();
+        if (loomNo) {
+            // Show loading indicator
+            const $form = $('#unit259Form');
+            const loadingMessage = $('<div>')
+                .addClass('mb-4 p-4 rounded-md bg-blue-100 text-blue-700')
+                .text('Loading loom details...');
+            $form.find('.loading-message').remove();
+            $form.prepend(loadingMessage);
+    
+            // Get the latest beam and design details for this loom
+            $.get(`/api/loom/${loomNo}/latest`)
+                .done(function(response) {
+                    if (response.success) {
+                        // Populate all fields with the response data
+                        $('#design_no').val(response.design_no || '');
+                        $('#order_no').val(response.order_no || '');
+                        $('#reed').val(response.reed || '');
+                        $('#ppi').val(response.pick || ''); // PPI is stored as 'Pick' in orderbook
+                        
+                        // Log the values being set for debugging
+                        console.log('Setting values:', {
+                            design_no: response.design_no,
+                            order_no: response.order_no,
+                            reed: response.reed,
+                            ppi: response.pick
+                        });
+    
+                        // Calculate values if needed
+                        calculateValues();
+                        
+                        // Show success message
+                        loadingMessage
+                            .removeClass('bg-blue-100 text-blue-700')
+                            .addClass('bg-green-100 text-green-700')
+                            .text('Loom details loaded successfully');
+                    } else {
+                        clearDesignFields();
+                        loadingMessage
+                            .removeClass('bg-blue-100 text-blue-700')
+                            .addClass('bg-yellow-100 text-yellow-700')
+                            .text('No active design found for this loom');
+                    }
+                })
+                .fail(function(jqXHR) {
+                    clearDesignFields();
+                    let errorMessage = 'Error loading loom details';
+                    try {
+                        const response = JSON.parse(jqXHR.responseText);
+                        errorMessage = response.error || errorMessage;
+                    } catch (e) {
+                        console.error('Error parsing response:', e);
+                    }
+                    loadingMessage
+                        .removeClass('bg-blue-100 text-blue-700')
+                        .addClass('bg-red-100 text-red-700')
+                        .text(errorMessage);
+                })
+                .always(function() {
+                    // Remove loading message after 3 seconds
+                    setTimeout(function() {
+                        loadingMessage.fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                });
+        } else {
+            clearDesignFields();
+        }
+    });
+    
+    // Function to clear design-related fields
+    function clearDesignFields() {
+        $('#design_no').val('');
+        $('#order_no').val('');
+        $('#reed').val('');
+        $('#ppi').val('');
+        // Reset calculated values
+        calculateValues();
+    }
+
+    // Function to clear design-related fields
+    function clearDesignFields() {
+        $('#design_no').val('');
+        $('#order_no').val('');
+        $('#reed').val('');
+        $('#ppi').val('');
+    }
+
+    // Calculate values when inputs change
+    $('#rpm, #reading, #ppi, #shift_hours, #shift_minutes').on('input', calculateValues);
+
+    // Function to calculate efficiency, production, and loss
+    function calculateValues() {
+        const rpm = parseFloat($('#rpm').val()) || 0;
+        const reading = parseFloat($('#reading').val()) || 0;
+        const ppi = parseFloat($('#ppi').val()) || 0;
+        const shiftHours = parseFloat($('#shift_hours').val()) || 0;
+        const shiftMinutes = parseFloat($('#shift_minutes').val()) || 0;
+        const totalShiftTime = shiftHours + (shiftMinutes / 60);
+
+        // Calculate efficiency based on shift time
+        const efficiency = totalShiftTime > 0 ? (reading * 100) / (rpm * totalShiftTime * 60) : 0;
+        $('#efficiency').val(efficiency.toFixed(2));
+
+        // Calculate production meters
+        const productionMeters = reading / (ppi * 39.37);
+        $('#production_meters').val(productionMeters.toFixed(2));
+
+        // Calculate loss meters
+        const potentialProduction = totalShiftTime > 0 ? (rpm * totalShiftTime * 60) / (ppi * 39.37) : 0;
+        const lossMeters = potentialProduction - productionMeters;
+        $('#loss_meters').val(lossMeters.toFixed(2));
+    }
+
+    // Form submission handling
+    $('#unit259Form').on('submit', function(e) {
+        e.preventDefault();
+
+        let $form = $(this);
+        let $submitBtn = $('#submitButton');
+        let originalBtnText = $submitBtn.html();
+
+        // Validate form fields
+        let isValid = true;
+        $('.form-group').each(function() {
+            let $input = $(this).find('input:not([readonly]), select, textarea');
+            let $error = $(this).find('.text-red-500');
+
+            if ($error.length) {
+                $error.remove();
+            }
+
+            if ($input.prop('required') && !$input.val()) {
+                isValid = false;
+                let fieldName = $input.prev('label').text().trim();
+                let $errorDiv = $('<div>')
+                    .addClass('text-red-500 text-sm mt-1')
+                    .text(`${fieldName} is required`);
+                $(this).append($errorDiv);
+            }
+        });
+
+        if (!isValid) return false;
+
+        // Disable submit button and show loading state
+        $submitBtn.prop('disabled', true).html(
+            '<svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">' +
+            '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>' +
+            '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
+            '</svg>Submitting...'
+        );
+
+        // Submit form data
+        $.ajax({
+            url: window.location.href,
+            method: 'POST',
+            data: new FormData($form[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    // Show success message
+                    let alert = $('<div>')
+                        .addClass('mb-4 p-4 rounded-md bg-green-100 text-green-700')
+                        .text(response.message);
+                    $form.prepend(alert);
+
+                    // Reset form
+                    $form[0].reset();
+                    $('.select2').val('').trigger('change');
+                    clearDesignFields();
+
+                    // Reload page after delay
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while submitting the form';
+                try {
+                    let response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || response.message || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+
+                let alert = $('<div>')
+                    .addClass('mb-4 p-4 rounded-md bg-red-100 text-red-700')
+                    .text(errorMessage);
+                $form.prepend(alert);
+            },
+            complete: function() {
+                // Re-enable submit button
+                $submitBtn.prop('disabled', false).html(originalBtnText);
+
+                // Remove alerts after 5 seconds
+                setTimeout(function() {
+                    $('.mb-4.p-4.rounded-md').fadeOut('slow', function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

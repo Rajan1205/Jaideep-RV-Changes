@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div id="root"></div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+  import { createRoot } from 'react-dom/client';
+  import GreyEfficiencyDashboard from '/static/js/grey-efficiency-dashboard.js';
+
+  const container = document.getElementById('root');
+  const root = createRoot(container);
+  root.render(<GreyEfficiencyDashboard />);
+</script>
+{% endblock %}

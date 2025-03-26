@@ -1,0 +1,723 @@
+{% extends "base.html" %}
+
+{% block title %}Warping Production{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<style>
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-input {
+        width: 100%;
+        border: 1px solid #E5E7EB;
+        border-radius: 6px;
+        padding: 0.625rem;
+        background-color: #F9FAFB;
+        transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Select2 Customization */
+    .select2-container .select2-selection--single {
+        height: 42px !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 6px !important;
+        background-color: #F9FAFB !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 42px !important;
+        padding-left: 0.75rem !important;
+        color: #1F2937 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        right: 0.5rem !important;
+    }
+
+    .select2-dropdown {
+        border-color: #E5E7EB !important;
+        border-radius: 6px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Additional styles for quantity info */
+    .quantity-info {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background-color: #F3F4F6;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+
+    .quantity-info-detail {
+        margin-top: 0.25rem;
+        color: #4B5563;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mb-4" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Warping Production</h1>
+        <p class="text-gray-600">Record and monitor warping production activities</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Add Warping Production Records</h2>
+        </div>
+
+        <form id="productionForm" method="POST" class="p-6" novalidate>
+            {{ form.csrf_token }}
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Order Details -->
+                <div class="space-y-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Order No. <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.order_no(class="select2 form-input") }}
+                        <div class="loading-indicator ml-2" id="orderLoading"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Design No. <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.design_no(class="select2 form-input") }}
+                        <div class="quantity-info hidden" id="design-quantity-info"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Machine No. <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.machine_no(class="form-input") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Beam No. <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.beam_no(class="form-input") }}
+                    </div>
+                </div>
+
+                <!-- Production Details -->
+                <div class="space-y-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Start Date & Time <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.start_datetime(class="form-input datetimepicker") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            End Date & Time <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.end_datetime(class="form-input datetimepicker") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            RPM <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.rpm(class="form-input", min="100", max="1000") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Quantity (Meters) <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.quantity(class="form-input", type="number", step="0.01") }}
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <div class="space-y-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Warper Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.warper_name(class="form-input select2") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Sections <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.sections(class="form-input", type="number") }}
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Breakages <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.breakages(class="form-input", type="number") }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="mt-8">
+                <label class="form-label">Comments</label>
+                {{ form.comments(class="form-input", rows="3") }}
+                <div class="mt-1 text-sm text-gray-500">
+                    <span id="commentsCharCount">0</span>/500 characters
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="mt-8 flex justify-end space-x-4 items-center">
+                <div class="loading-indicator mr-4" id="submitLoading"></div>
+                <button type="submit" class="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Add Production Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="form-card">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Warping Production Records</h2>
+        </div>
+
+        <div class="p-6 overflow-x-auto">
+            <table id="production-table" class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Design No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Beam No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Machine No.</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity (Meters)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warping Time (Mins)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Efficiency (%)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Production Time (Hours)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for record in records %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.order_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.design_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.beam_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.machine_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.quantity }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.warping_time_minutes if record.warping_time_minutes is not none else '-' }}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.efficiency }}%</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            data-start="{{ record.start_datetime }}"
+                            data-end="{{ record.end_datetime }}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <button onclick="showDetails('{{ record.beam_no }}')"
+                                    class="text-blue-600 hover:text-blue-800">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="detailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center border-b pb-3">
+            <h3 class="text-lg font-medium text-gray-900">Production Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="modalContent" class="mt-4">
+            <!-- Content will be dynamically populated -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Required JS libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+$(document).ready(function() {
+    var designByOrder = {{ design_by_order|safe }};
+
+    // CSRF Setup
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", $('input[name=csrf_token]').val());
+            }
+        }
+    });
+
+    // Initialize Select2
+    $('.select2').select2({
+        width: '100%',
+        placeholder: 'Select an option',
+        allowClear: true
+    });
+
+    // Initialize Flatpickr
+    const dateTimeConfig = {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        minuteIncrement: 1,
+        defaultHour: new Date().getHours(),
+        defaultMinute: new Date().getMinutes(),
+        allowInput: true,
+        altInput: true,
+        altFormat: "d-m-Y h:i K",
+        locale: {
+            firstDayOfWeek: 1
+        }
+    };
+
+    flatpickr(".datetimepicker", dateTimeConfig);
+
+    // Order Number Change Handler
+    $('#order_no').on('change', function() {
+        const orderNo = $(this).val();
+        const designSelect = $('#design_no');
+        const loadingIndicator = $('#orderLoading');
+        const quantityInfo = $('#design-quantity-info');
+
+        designSelect.empty().append(new Option('Select Design No.', '', true, true));
+        quantityInfo.addClass('hidden').empty();
+
+        if (orderNo && designByOrder[orderNo]) {
+            loadingIndicator.show();
+
+            const designEntries = Object.entries(designByOrder[orderNo]);
+            designEntries.sort((a, b) => a[1].design_no.localeCompare(b[1].design_no));
+
+            designEntries.forEach(([designKey, designInfo]) => {
+                designSelect.append(new Option(designInfo.design_no, designInfo.design_no));
+            });
+
+            designSelect.trigger('change');
+            loadingIndicator.hide();
+        }
+    });
+
+    // Design Number Change Handler
+    $('#design_no').on('change', function() {
+        const orderNo = $('#order_no').val();
+        const designNo = $(this).val();
+        const quantityInfo = $('#design-quantity-info');
+
+        quantityInfo.addClass('hidden').empty();
+
+        if (orderNo && designNo && designByOrder[orderNo]) {
+            const designEntry = Object.entries(designByOrder[orderNo])
+                .find(([_, info]) => info.design_no === designNo);
+
+            if (designEntry) {
+                const info = designEntry[1];
+                let html = `
+                    <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-2">
+                        <div class="text-blue-800 font-medium">
+                            Total Order Quantity: ${info.quantity} meters
+                        </div>
+                        <div class="mt-2 text-sm text-blue-700">
+                            Individual Orders:
+                            <ul class="list-disc pl-4 mt-1">`;
+
+                info.individual_orders.forEach(order => {
+                    html += `<li>Design No. ${order.order_details['Design No.']} - ${order.quantity} meters</li>`;
+                });
+
+                html += `</ul></div></div>`;
+                quantityInfo.html(html).removeClass('hidden');
+                $('#quantity').attr('max', info.quantity);
+            }
+        }
+    });
+
+    // Form Validation Functions
+    function validateForm() {
+        let isValid = true;
+        clearErrors();
+
+        // Required fields validation
+        const requiredFields = ['order_no', 'design_no', 'machine_no', 'beam_no',
+                              'start_datetime', 'end_datetime', 'rpm', 'quantity',
+                              'warper_name', 'sections', 'breakages'];
+
+        requiredFields.forEach(field => {
+            const value = $(`#${field}`).val();
+            if (!value || value.trim() === '') {
+                showFieldError(field, `This field is required`);
+                isValid = false;
+            }
+        });
+
+        // Date validation
+        if (!validateDateTimes()) {
+            isValid = false;
+        }
+
+        // Quantity validation
+        const orderNo = $('#order_no').val();
+        const designNo = $('#design_no').val();
+        const enteredQuantity = parseFloat($('#quantity').val());
+
+        if (orderNo && designNo && designByOrder[orderNo]) {
+            const designEntry = Object.entries(designByOrder[orderNo])
+                .find(([_, info]) => info.design_no === designNo);
+
+            if (designEntry) {
+                const totalQuantity = designEntry[1].quantity;
+                if (enteredQuantity > totalQuantity) {
+                    showFieldError('quantity',
+                        `Cannot exceed total order quantity (${totalQuantity} meters)`);
+                    isValid = false;
+                }
+            }
+        }
+
+        // RPM validation
+        const rpm = parseInt($('#rpm').val());
+        if (isNaN(rpm) || rpm < 100 || rpm > 1000) {
+            showFieldError('rpm', 'RPM must be between 100 and 1000');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    function validateDateTimes() {
+        const start = $('#start_datetime').val();
+        const end = $('#end_datetime').val();
+
+        if (!start || !end) {
+            showFieldError('end_datetime', 'Both start and end times are required');
+            return false;
+        }
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        if (endDate <= startDate) {
+            showFieldError('end_datetime', 'End date & time must be after start date & time');
+            return false;
+        }
+
+        return true;
+    }
+
+    function showFieldError(fieldId, message) {
+        const field = $(`#${fieldId}`);
+        field.addClass('border-red-500');
+
+        field.parent().find('.error-message').remove();
+
+        const errorDiv = $('<div>')
+            .addClass('error-message text-red-500 text-sm mt-1')
+            .text(message);
+
+        field.parent().append(errorDiv);
+
+        if (field.hasClass('select2-hidden-accessible')) {
+            field.next('.select2-container').find('.select2-selection').addClass('border-red-500');
+        }
+    }
+
+    function clearErrors() {
+        $('.error-message').remove();
+        $('.border-red-500').removeClass('border-red-500');
+        $('.select2-container').find('.select2-selection').removeClass('border-red-500');
+    }
+
+    function showAlert(message, type) {
+        $('.alert-message').remove();
+
+        const alertDiv = $('<div>')
+            .addClass(`alert-message fixed top-4 right-4 p-4 rounded-md text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} z-50`)
+            .text(message);
+
+        $('body').append(alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    }
+
+    // Form Submission Handler
+    $('#productionForm').on('submit', function(e) {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return false;
+        }
+
+        const submitBtn = $(this).find('button[type="submit"]');
+        const loadingIndicator = $('#submitLoading');
+
+        submitBtn.prop('disabled', true);
+        loadingIndicator.show();
+
+        const formData = new FormData(this);
+
+        $.ajax({
+            url: '/warping-production',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                console.log('Success Response:', response);
+                if (response.success) {
+                    showAlert('Record saved successfully', 'success');
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+                // else {
+                //     handleErrorResponse(response);
+                // }
+            },
+            error: function(xhr) {
+                console.log('Error Response:', xhr.responseText);
+                // handleErrorResponse(xhr.responseText);
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                loadingIndicator.hide();
+            }
+        });
+    });
+
+    // function handleErrorResponse(response) {
+    //     try {
+    //         const errorData = typeof response === 'string' ? JSON.parse(response) : response;
+
+    //         if (errorData.errors) {
+    //             Object.entries(errorData.errors).forEach(([field, error]) => {
+    //                 showFieldError(field, error);
+    //             });
+    //         }
+
+    //         showAlert(errorData.error || 'Please correct the errors below', 'error');
+    //     } catch (e) {
+    //         console.error('Error parsing response:', e);
+    //         showAlert('An error occurred while saving the record', "error");
+    //     }
+    // }
+
+    // DataTable Initialization
+    $('#production-table').DataTable({
+        responsive: true,
+        pageLength: 10,
+        order: [[0, 'desc']],
+        columnDefs: [
+            {
+                targets: [4, 5, 6, 7],
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        return parseFloat(data).toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    }
+                    return data;
+                }
+            }
+        ]
+    });
+
+    // Production Time Calculator
+    $('td[data-start][data-end]').each(function() {
+        const start = new Date($(this).data('start'));
+        const end = new Date($(this).data('end'));
+        const diffHours = (end - start) / (1000 * 60 * 60);
+        $(this).text(diffHours.toFixed(2));
+    });
+
+    // Modal Functions
+    window.showDetails = function(beamNo) {
+        const modal = document.getElementById('detailsModal');
+        const modalContent = document.getElementById('modalContent');
+        const records = {{ records|tojson|safe }};
+        const record = records.find(r => r.beam_no === beamNo);
+
+        if (record) {
+            const start = new Date(record.start_datetime);
+            const end = new Date(record.end_datetime);
+            const duration = Math.round((end - start) / (1000 * 60));
+
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                     Order Details Section
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Order Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Order No.</p>
+                                <p class="mt-1">${record.order_no}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Design No.</p>
+                                <p class="mt-1">${record.design_no}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Machine No.</p>
+                                <p class="mt-1">${record.machine_no}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Beam No.</p>
+                                <p class="mt-1">${record.beam_no}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     Production Details Section
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Production Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Start Date & Time</p>
+                                <p class="mt-1">${new Date(record.start_datetime).toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">End Date & Time</p>
+                                <p class="mt-1">${new Date(record.end_datetime).toLocaleString()}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">RPM</p>
+                                <p class="mt-1">${record.rpm}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Quantity (Meters)</p>
+                                <p class="mt-1">${record.quantity}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     Performance Metrics Section
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Performance Metrics</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Warping Time</p>
+                                <p class="mt-1">${record.warping_time_minutes ? record.warping_time_minutes.toFixed(2) : '-'} minutes</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Efficiency</p>
+                                <p class="mt-1">${record.efficiency}%</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Production Time</p>
+                                <p class="mt-1">${duration} minutes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     Additional Details Section
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Additional Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Warper Name</p>
+                                <p class="mt-1">${record.warper_name}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Sections</p>
+                                <p class="mt-1">${record.sections}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Breakages</p>
+                                <p class="mt-1">${record.breakages}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                     Comments Section
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Comments</h4>
+                        <p class="text-sm text-gray-900">${record.comments || 'No comments'}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        modal.classList.remove('hidden');
+    };
+
+    window.closeModal = function() {
+        document.getElementById('detailsModal').classList.add('hidden');
+    };
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailsModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+
+    // Character Counter for Comments
+    $('#comments').on('input', function() {
+        const maxLength = 500;
+        const currentLength = $(this).val().length;
+        $('#commentsCharCount').text(currentLength);
+
+        if (currentLength > maxLength) {
+            $(this).val($(this).val().substring(0, maxLength));
+            $('#commentsCharCount').text(maxLength);
+        }
+    });
+});
+</script>
+{% endblock %}

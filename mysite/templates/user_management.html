@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <h2 class="text-2xl font-bold mb-4">User Management</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="POST" class="space-y-6">
+            {{ form.csrf_token }}
+            
+            <div class="mb-4">
+                {{ form.name.label(class="block text-sm font-medium text-gray-700") }}
+                {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+            </div>
+
+            <div class="space-y-4">
+                {% for section_name, section_roles in role_groups.items() %}
+                <div class="border rounded-lg p-4">
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">{{ section_name }}</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        {% for role in section_roles %}
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="roles" value="{{ role }}" 
+                                   class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                            <span class="ml-2 text-gray-700">{{ role }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6">
+                {{ form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full") }}
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-bold mb-4">Current Users</h3>
+        <div class="space-y-4">
+            {% for user in users %}
+            <div class="border p-4 rounded hover:shadow-md transition-shadow duration-200">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-medium text-lg">{{ user.name }}</h4>
+                        {% for section_name, section_roles in role_groups.items() %}
+                            {% set user_roles_in_section = user.roles|select("in", section_roles)|list %}
+                            {% if user_roles_in_section %}
+                            <div class="mt-2">
+                                <h5 class="text-sm font-medium text-gray-500">{{ section_name }}</h5>
+                                <div class="flex flex-wrap gap-2 mt-1">
+                                    {% for role in user_roles_in_section %}
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                        {{ role }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editUser('{{ user.name }}')" 
+                                class="text-blue-500 hover:text-blue-700">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteUser('{{ user.name }}')"
+                                class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function editUser(name) {
+    fetch(`/api/users/${name}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('[name="name"]').value = data.user.name;
+                const roleCheckboxes = document.querySelectorAll('[name="roles"]');
+                roleCheckboxes.forEach(checkbox => {
+                    checkbox.checked = data.user.roles.includes(checkbox.value);
+                });
+                document.querySelector('form').scrollIntoView({ behavior: 'smooth' });
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function deleteUser(name) {
+    if (confirm('Are you sure you want to delete this user?')) {
+        fetch('/user-management', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name="csrf_token"]').value
+            },
+            body: JSON.stringify({ name: name })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert('Error deleting user');
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+</script>
+{% endblock %}

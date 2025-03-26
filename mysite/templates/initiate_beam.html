@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h1 class="text-2xl font-bold mb-6">Initiate Beam</h1>
+
+        <form id="initiateBeamForm" method="POST" class="space-y-6">
+            {{ form.csrf_token }}
+
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Location *
+                    </label>
+                    {{ form.location(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <span class="text-red-500 text-sm location-error"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Beam No *
+                    </label>
+                    {{ form.beam_no(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <span class="text-red-500 text-sm beam_no-error"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Loom No *
+                    </label>
+                    {{ form.loom_no(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <span class="text-red-500 text-sm loom_no-error"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Start Date & Time *
+                    </label>
+                    <div class="flatpickr mt-1 relative">
+                        {{ form.start_datetime(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500", data_input=true) }}
+                        <a class="input-button absolute right-2 top-2" title="toggle" data-toggle>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </a>
+                    </div>
+                    <span class="text-red-500 text-sm start_datetime-error"></span>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Status
+                    </label>
+                    {{ form.status(class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm") }}
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-xl font-bold mb-4">Beam Records</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beam No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loom No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="beamRecordsBody">
+                    {% for record in records %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ record.location }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ record.beam_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ record.loom_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ record.start_datetime }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ record.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 dropdowns
+    $('.select2').select2({
+        theme: 'classic',
+        width: '100%',
+        placeholder: 'Select an option'
+    });
+
+    // Initialize Flatpickr datetime picker
+    flatpickr('.flatpickr', {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        maxDate: 'today',
+        defaultHour: new Date().getHours(),
+        defaultMinute: new Date().getMinutes(),
+        wrap: true
+    });
+
+    // Function to load beam records
+    function loadBeamRecords() {
+        $.ajax({
+            url: '/api/beam-records',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const tbody = $('#beamRecordsBody');
+                    tbody.empty();
+                    response.records.forEach(function(record) {
+                        tbody.append(`
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">${record.location}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${record.beam_no}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${record.loom_no}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${record.start_datetime}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${record.status}</td>
+                            </tr>
+                        `);
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading beam records:', error);
+            }
+        });
+    }
+
+    // Handle location change event
+    $('#location').on('change', function() {
+        const location = $(this).val();
+        console.log('Location changed to:', location);
+
+        // Reset and disable dependent dropdowns if no location selected
+        if (!location) {
+            $('#beam_no, #loom_no').each(function() {
+                $(this)
+                    .empty()
+                    .append('<option value="">Select...</option>')
+                    .prop('disabled', true)
+                    .trigger('change');
+            });
+            return;
+        }
+
+        // Enable the dependent dropdowns
+        $('#beam_no, #loom_no').prop('disabled', false);
+
+        // Fetch available beams
+        $.ajax({
+            url: `/api/beams/${encodeURIComponent(location)}`,
+            method: 'GET',
+            success: function(response) {
+                console.log('Beam response:', response);
+                const beamSelect = $('#beam_no');
+                beamSelect.empty().append('<option value="">Select Beam No.</option>');
+
+                if (response.success && response.beams && response.beams.length > 0) {
+                    response.beams.forEach(function(beam) {
+                        beamSelect.append(new Option(beam.text, beam.id));
+                    });
+                    console.log('Added beam options:', response.beams);
+                } else {
+                    console.log('No beams available for location:', location);
+                }
+                beamSelect.trigger('change');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching beams:', error);
+                console.error('XHR Status:', status);
+                console.error('XHR Response:', xhr.responseText);
+                alert('Error fetching available beams. Please try again.');
+            }
+        });
+
+        // Fetch available looms
+        $.ajax({
+            url: `/api/looms/${encodeURIComponent(location)}`,
+            method: 'GET',
+            success: function(response) {
+                console.log('Loom response:', response);
+                const loomSelect = $('#loom_no');
+                loomSelect.empty().append('<option value="">Select Loom No.</option>');
+
+                if (response.success && response.looms && response.looms.length > 0) {
+                    response.looms.forEach(function(loom) {
+                        loomSelect.append(new Option(loom.text, loom.id));
+                    });
+                    console.log('Added loom options:', response.looms);
+                } else {
+                    console.log('No looms available for location:', location);
+                }
+                loomSelect.trigger('change');
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching looms:', error);
+                console.error('XHR Status:', status);
+                console.error('XHR Response:', xhr.responseText);
+                alert('Error fetching available looms. Please try again.');
+            }
+        });
+    });
+
+    // Handle form submission
+    $('#initiateBeamForm').on('submit', function(e) {
+        e.preventDefault();
+        // Clear any previous error messages
+        $('.text-red-500').text('');
+
+        // Get form data
+        const formData = $(this).serialize();
+
+        // Submit form via AJAX
+        $.ajax({
+            url: '/initiate-beam',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    alert('Beam initiated successfully!');
+                    loadBeamRecords();  // Reload the records table
+                    // Optional: Reset form
+                    $('#initiateBeamForm')[0].reset();
+                    $('.select2').val('').trigger('change');
+                } else {
+                    alert(response.error || 'An error occurred while initiating the beam.');
+                }
+            },
+            error: function(xhr) {
+                console.error('Form submission error:', xhr);
+                const response = xhr.responseJSON;
+                if (response && response.errors) {
+                    // Display validation errors
+                    Object.keys(response.errors).forEach(function(field) {
+                        $(`.${field}-error`).text(response.errors[field]);
+                    });
+                } else {
+                    // Display generic error
+                    alert('An error occurred. Please try again.');
+                }
+            }
+        });
+    });
+
+    // Initialize records table on page load
+    loadBeamRecords();
+
+    // Add debugging for Select2 initialization
+    if ($.fn.select2) {
+        console.log('Select2 is properly loaded');
+    } else {
+        console.error('Select2 is not loaded');
+    }
+
+    // Add debugging for form elements
+    console.log('Form elements:', {
+        locationSelect: $('#location').length,
+        beamSelect: $('#beam_no').length,
+        loomSelect: $('#loom_no').length
+    });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+
+{% block title %}Sizing Production - Factory Management System{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.dataTables.min.css">
+<!-- Custom CSS for Select2 -->
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        padding: 5px !important;
+    }
+    .select2-container--default .select2-selection--single {
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.375rem !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Sizing Production</h1>
+        <p class="text-gray-600">Record and manage sizing production entries</p>
+    </div>
+
+    <!-- Production Form -->
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">New Production Entry</h2>
+        <form id="sizingForm" method="POST" class="space-y-6">
+            {{ form.csrf_token }}
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Beam and Status -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.beam_no.label }}
+                    </label>
+                    {{ form.beam_no(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.beam_no.errors %}
+                        {% for error in form.beam_no.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.status.label }}
+                    </label>
+                    {{ form.status(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.status.errors %}
+                        {% for error in form.status.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.sizer_name.label }}
+                    </label>
+                    {{ form.sizer_name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.sizer_name.errors %}
+                        {% for error in form.sizer_name.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Date and Time Fields -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.start_datetime.label }}
+                    </label>
+                    {{ form.start_datetime(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 datetimepicker") }}
+                    {% if form.start_datetime.errors %}
+                        {% for error in form.start_datetime.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.end_datetime.label }}
+                    </label>
+                    {{ form.end_datetime(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 datetimepicker") }}
+                    {% if form.end_datetime.errors %}
+                        {% for error in form.end_datetime.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Production Details -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.rf.label }}
+                    </label>
+                    {{ form.rf(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.rf.errors %}
+                        {% for error in form.rf.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.moisture.label }}
+                    </label>
+                    {{ form.moisture(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.moisture.errors %}
+                        {% for error in form.moisture.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.speed.label }}
+                    </label>
+                    {{ form.speed(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    {% if form.speed.errors %}
+                        {% for error in form.speed.errors %}
+                            <span class="text-red-500 text-sm">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comments -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.comments.label }}
+                </label>
+                {{ form.comments(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                {% if form.comments.errors %}
+                    {% for error in form.comments.errors %}
+                        <span class="text-red-500 text-sm">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add Production Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Production Records Table -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Production Records</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="production-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Beam No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sizer Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">RF</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Moisture</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Speed</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Comments</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for record in records %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.beam_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.status }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.sizer_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.start_datetime }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.end_datetime }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.rf }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.moisture }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.speed }}</td>
+                        <td class="px-6 py-4 whitespace-normal text-sm text-gray-900">{{ record.comments }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- DataTables -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('.select2').select2({
+        width: '100%',
+        placeholder: function() {
+            return $(this).data('placeholder');
+        }
+    });
+
+    // Initialize Flatpickr
+    const dateTimeFields = document.querySelectorAll('.datetimepicker');
+    dateTimeFields.forEach(field => {
+        flatpickr(field, {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true,
+            minuteIncrement: 1,
+            allowInput: true,
+            clickOpens: true,
+            defaultHour: 9
+        });
+    });
+
+    // Initialize DataTable
+    $('#production-table').DataTable({
+        responsive: true,
+        pageLength: 25,
+        order: [[3, 'desc']], // Sort by start datetime descending
+        language: {
+            search: '',
+            searchPlaceholder: 'Search records...'
+        }
+    });
+
+    // Form submission handling
+    $('#sizingForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        const originalBtnText = submitBtn.html();
+
+        // Clear previous errors
+        $('.text-red-500').remove();
+
+        // Disable submit button
+        submitBtn.prop('disabled', true).html('Submitting...');
+
+        $.ajax({
+            url: window.location.pathname,
+            method: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    // Show success message
+                    const alert = $('<div>')
+                        .addClass('mb-4 p-4 rounded-md bg-green-100 text-green-700')
+                        .text(response.message);
+                    form.prepend(alert);
+
+                    // Reset form
+                    form[0].reset();
+                    $('.select2').val('').trigger('change');
+
+                    // Reload page after delay
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while submitting the form';
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    errorMessage = response.error || response.message || errorMessage;
+
+                    // Handle validation errors
+                    if (response.errors) {
+                        Object.entries(response.errors).forEach(([field, errors]) => {
+                            const fieldError = Array.isArray(errors) ? errors[0] : errors;
+                            const errorDiv = $('<div>')
+                                .addClass('text-red-500 text-sm mt-1')
+                                .text(fieldError);
+                            $(`[name="${field}"]`).closest('.form-group').append(errorDiv);
+                        });
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+
+                // Show error message
+                const alert = $('<div>')
+                    .addClass('mb-4 p-4 rounded-md bg-red-100 text-red-700')
+                    .text(errorMessage);
+                form.prepend(alert);
+            },
+            complete: function() {
+                // Re-enable submit button
+                submitBtn.prop('disabled', false).html(originalBtnText);
+
+                // Remove alerts after 5 seconds
+                setTimeout(function() {
+                    $('.mb-4.p-4.rounded-md').fadeOut('slow', function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

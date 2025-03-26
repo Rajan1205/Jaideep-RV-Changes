@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block title %}Beam on Loom - Factory Management System{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        padding: 5px !important;
+    }
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Beam on Loom</h1>
+        <p class="text-gray-600">Track beam processes on looms</p>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+        <form id="beamForm" method="POST" class="space-y-4">
+            {{ form.csrf_token }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Location -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.location.label.text }}
+                    </label>
+                    {{ form.location(class_="select2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a location
+                    </div>
+                </div>
+
+                <!-- Loom Number -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.loom_no.label.text }}
+                    </label>
+                    {{ form.loom_no(class_="select2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a loom number
+                    </div>
+                </div>
+
+                <!-- Beam Number -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.beam_no.label.text }}
+                    </label>
+                    {{ form.beam_no(class_="select2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a beam number
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.status.label.text }}
+                    </label>
+                    {{ form.status(class_="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a status
+                    </div>
+                </div>
+
+                <!-- Status DateTime -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.status_datetime.label.text }}
+                    </label>
+                    {{ form.status_datetime(class_="datetimepicker mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a date and time
+                    </div>
+                </div>
+
+                <!-- Role -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.role.label.text }}
+                    </label>
+                    {{ form.role(class_="select2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a role
+                    </div>
+                </div>
+
+                <!-- Name -->
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form.name.label.text }}
+                    </label>
+                    {{ form.name(class_="select2 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500") }}
+                    <div class="invalid-feedback text-red-500 text-sm mt-1" style="display: none;">
+                        Please select a name
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-6">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Add Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Process Records</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table id="records-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Beam No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loom No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for record in records %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.timestamp }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.beam_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.loom_no }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.status }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.role }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#records-table').DataTable({
+        order: [[0, 'desc']], // Sort by timestamp descending
+        pageLength: 10,
+        responsive: true
+    });
+
+    // Initialize Select2 for all select elements
+    $('.select2').select2({
+        width: '100%',
+        placeholder: function() {
+            return $(this).data('placeholder') || 'Select an option';
+        },
+        allowClear: true
+    });
+
+    // Initialize Flatpickr for datetime picker
+    $('.datetimepicker').flatpickr({
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        defaultDate: new Date(),
+        maxDate: new Date()
+    });
+
+    // Form validation function
+    function validateForm() {
+        let isValid = true;
+        const requiredFields = ['location', 'loom_no', 'beam_no', 'status', 'status_datetime', 'role', 'name'];
+
+        requiredFields.forEach(field => {
+            const $field = $(`#${field}`);
+            const $feedback = $field.siblings('.invalid-feedback');
+            const value = $field.val();
+
+            if (!value) {
+                isValid = false;
+                $field.addClass('is-invalid');
+                $feedback.show();
+            } else {
+                $field.removeClass('is-invalid');
+                $feedback.hide();
+            }
+        });
+
+        return isValid;
+    }
+
+    // Clear form function
+    function clearForm() {
+        $('#beamForm')[0].reset();
+        $('.select2').val('').trigger('change');
+        $('#status').val('');
+        $('.invalid-feedback').hide();
+        $('.is-invalid').removeClass('is-invalid');
+    }
+
+    // Handle Location Change
+    $('#location').on('change', function() {
+        const location = $(this).val();
+        console.log('Location changed to:', location);
+
+        if (location) {
+            // Reset dependent fields
+            $('#loom_no').empty().append('<option value="">Select Loom No.</option>').trigger('change');
+            $('#beam_no').empty().append('<option value="">Select Beam No.</option>').trigger('change');
+            $('#status').val('');
+            $('#role').val('').trigger('change');
+            $('#name').empty().append('<option value="">Select Name</option>').trigger('change');
+
+            // Fetch available looms for the location
+            $.get(`/api/looms-v2/${encodeURIComponent(location)}`)
+                .done(function(response) {
+                    console.log('Looms response:', response);
+                    if (response.success && response.looms) {
+                        const loomSelect = $('#loom_no');
+                        loomSelect.empty().append('<option value="">Select Loom No.</option>');
+                        response.looms.forEach(function(loom) {
+                            loomSelect.append(new Option(loom.text, loom.id));
+                        });
+                        loomSelect.trigger('change');
+                    }
+                })
+                .fail(function(error) {
+                    console.error('Error fetching looms:', error);
+                    alert('Error fetching available looms. Please try again.');
+                });
+        }
+    });
+
+    // Handle Loom Number Change
+    $('#loom_no').on('change', function() {
+        const loomNo = $(this).val();
+        console.log('Loom changed to:', loomNo);
+
+        if (loomNo) {
+            // Fetch beam and status information
+            $.get(`/api/beam-v2/${loomNo}`)
+                .done(function(response) {
+                    console.log('Beam info response:', response);
+                    if (response.success) {
+                        // Update beam number
+                        if (response.beam_no) {
+                            $('#beam_no').empty()
+                                .append(new Option(response.beam_no, response.beam_no, true, true))
+                                .trigger('change');
+                        }
+                        // Update status
+                        if (response.next_status) {
+                            $('#status').val(response.next_status);
+                        }
+                    }
+                })
+                .fail(function(error) {
+                    console.error('Error fetching beam info:', error);
+                    alert('Error fetching beam information. Please try again.');
+                });
+        }
+    });
+
+    // Handle Role Change
+    $('#role').on('change', function() {
+        const role = $(this).val();
+        console.log('Role changed to:', role);
+
+        if (role) {
+            // Fetch users for the selected role
+            $.ajax({
+                url: `/api/users/${encodeURIComponent(role)}`,
+                method: 'GET',
+                success: function(response) {
+                    console.log('Users API response:', response);
+                    if (response.success && response.users) {
+                        const nameSelect = $('#name');
+                        nameSelect.empty().append(`<option value="">Select ${role}</option>`);
+                        response.users.forEach(function(user) {
+                            nameSelect.append(new Option(user, user));
+                        });
+                        nameSelect.trigger('change');
+                    } else {
+                        console.error('Invalid response format:', response);
+                        alert('Error: Invalid response format from server');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('API Error:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    alert('Error fetching users. Please check console for details.');
+                }
+            });
+        } else {
+            $('#name').empty().append('<option value="">Select Name</option>').trigger('change');
+        }
+    });
+
+    // Form Submission Handler with DateTime Debugging
+    $('#beamForm').on('submit', function(e) {
+        e.preventDefault();
+        console.log('Form submitted');
+
+        if (!validateForm()) {
+            return false;
+        }
+
+        // Get the raw datetime value from the input
+        const rawDateTime = $('#status_datetime').val();
+        console.log('Raw datetime value:', rawDateTime);
+
+        // Parse with Flatpickr
+        const statusDateTime = flatpickr.parseDate($('#status_datetime').val(), "Y-m-d H:i");
+        console.log('Parsed datetime:', statusDateTime);
+
+        // Format as localized string for inspection
+        console.log('Datetime as local string:', statusDateTime.toString());
+        console.log('Datetime as ISO string:', statusDateTime.toISOString());
+
+        // Collect form data
+        const formData = {
+            location: $('#location').val(),
+            loom_no: $('#loom_no').val(),
+            beam_no: $('#beam_no').val(),
+            status: $('#status').val(),
+            // Keep the original datetime string format instead of converting to ISO
+            status_datetime: rawDateTime,
+            role: $('#role').val(),
+            name: $('#name').val()
+        };
+
+        console.log('Submitting form data:', formData);
+
+        // Submit form data
+        $.ajax({
+            url: '/beam-on-loom',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            headers: {
+                'X-CSRFToken': $('input[name=csrf_token]').val()
+            },
+            success: function(response) {
+                console.log('Form submission response:', response);
+                if (response.success) {
+                    alert('Status updated successfully');
+                    clearForm();
+                    window.location.reload();
+                } else {
+                    console.error('Server returned error:', response.error);
+                    alert(response.error || 'Error updating status');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Form submission error:', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    responseText: xhr.responseText,
+                    error: error
+                });
+                try {
+                    const response = JSON.parse(xhr.responseText);
+                    alert(response.error || 'Error submitting form. Please try again.');
+                } catch (e) {
+                    alert('Error submitting form. Please check console for details.');
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock extra_js %}

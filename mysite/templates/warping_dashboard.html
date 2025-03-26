@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Warping Production Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .expanded-row {
+        background-color: #f9fafb;
+    }
+
+    /* Alert styles */
+    .alert-card {
+        @apply bg-white rounded-lg shadow-md p-4 mb-4;
+    }
+
+    .alert-title {
+        @apply text-lg font-semibold text-red-600 mb-2;
+    }
+
+    .alert-content {
+        @apply text-sm text-gray-600;
+    }
+
+    .tooltip {
+        @apply invisible absolute z-10 py-2 px-3 text-sm text-white bg-gray-900 rounded-lg opacity-0 transition-opacity duration-300;
+    }
+
+    .tooltip-trigger:hover .tooltip {
+        @apply visible opacity-100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Warping Production Dashboard</h1>
+        <p class="mt-2 text-sm text-gray-600">Detailed view of warping production with order tracking</p>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+        <div id="react-root"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add React and dependencies -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
+<!-- Add the dashboard components -->
+<script type="module" src="{{ url_for('static', filename='js/WarpingDashboard.js') }}"></script>
+
+<!-- Initialize the dashboard -->
+<script type="module">
+    const root = ReactDOM.createRoot(document.getElementById('react-root'));
+    root.render(React.createElement(WarpingDashboard));
+</script>
+{% endblock %}

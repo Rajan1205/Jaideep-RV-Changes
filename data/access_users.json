@@ -1,0 +1,57 @@
+[
+    {
+        "id": 1,
+        "username": "admin",
+        "password": "pbkdf2:sha256:260000$xe1tIphWjZuKZRUv$cc7a14b4a9c85b3d25f4c30602ce8c311f18681dec5f9c0a8a0af3c64da12e2b",
+        "roles": [
+            "admin"
+        ],
+        "created_at": "2025-01-29T07:20:20.564126"
+    },
+    {
+        "id": 2,
+        "username": "warper",
+        "password": "pbkdf2:sha256:260000$90fl6BZ1CScinVQw$d886976cfe2171882dd97b103343873d3481009aad5a5a58d125813316f16b25",
+        "roles": [
+            "warping"
+        ],
+        "created_at": "2025-01-29T10:58:53.573560"
+    },
+    {
+        "id": 3,
+        "username": "manager",
+        "password": "pbkdf2:sha256:260000$C56D6qTLV3mblml9$b752f224cab814f1e37d292e0d13be4517f724f71d96118725606be00890c92e",
+        "roles": [
+            "manager"
+        ],
+        "created_at": "2025-01-29T10:59:05.991986"
+    },
+    {
+        "id": 5,
+        "username": "rajan1",
+        "password": "pbkdf2:sha256:260000$hsfvCakYnOUGSnuk$29b578887753ddae015a70d9d6cd6f83206fc25aa61856a85acacb0a675e087d",
+        "roles": [
+            "warping"
+        ],
+        "created_at": "2025-02-10T14:07:14.668368"
+    },
+    {
+        "id": 6,
+        "username": "jaideep",
+        "password": "pbkdf2:sha256:260000$dMBc7taWXqf14Cms$416083eee4628a2a86c1cacc5baee1f484fae842629ae1020136cdc69351763f",
+        "roles": [
+            "production"
+        ],
+        "created_at": "2025-02-10T14:09:38.742188"
+    },
+    {
+        "id": 6,
+        "username": "Alok089",
+        "password": "pbkdf2:sha256:260000$eL5R3zq4sRPVWwX1$1a99813705b83fe378a20fc1555613de7afb9ee7b342c3e8506990b810d7c3c5",
+        "roles": [
+            "admin",
+            "manager"
+        ],
+        "created_at": "2025-03-03T06:50:45.233671"
+    }
+]
